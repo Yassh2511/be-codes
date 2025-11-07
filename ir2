@@ -1,0 +1,57 @@
+# Program: Document Retrieval using Inverted Files
+
+from collections import defaultdict
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+# Sample collection of documents
+documents = {
+    "Doc1": "Machine learning is a subset of artificial intelligence.",
+    "Doc2": "Deep learning is part of machine learning methods.",
+    "Doc3": "Artificial intelligence and machine learning are changing the world."
+}
+
+# Step 1: Preprocessing (tokenization + stopword removal + lowercasing)
+stop_words = set(stopwords.words('english'))
+
+def preprocess(text):
+    tokens = word_tokenize(text.lower())
+    return [word for word in tokens if word.isalpha() and word not in stop_words]
+
+# Step 2: Build the Inverted Index
+inverted_index = defaultdict(set)
+
+for doc_id, text in documents.items():
+    words = preprocess(text)
+    for word in words:
+        inverted_index[word].add(doc_id)
+
+# Display Inverted Index
+print("Inverted Index:")
+for word, doc_set in inverted_index.items():
+    print(f"{word} → {sorted(list(doc_set))}")
+
+# Step 3: Query Processing
+def search(query):
+    query_terms = preprocess(query)
+    relevant_docs = None
+    for term in query_terms:
+        if term in inverted_index:
+            if relevant_docs is None:
+                relevant_docs = inverted_index[term].copy()
+            else:
+                relevant_docs &= inverted_index[term]  # Intersection for AND query
+        else:
+            return set()  # Term not found in any doc
+    return relevant_docs if relevant_docs else set()
+
+# Step 4: User Query
+query = input("\nEnter your search query: ")
+result_docs = search(query)
+
+# Step 5: Display Results
+if result_docs:
+    print("\nRelevant Documents:", ", ".join(result_docs))
+else:
+    print("\nNo relevant documents found.")
